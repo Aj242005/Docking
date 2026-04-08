@@ -1,51 +1,43 @@
 # Use the official hackathon base image
-ARG BASE_IMAGE=ghcr.io/meta-pytorch/openenv-base:latest
-FROM ${BASE_IMAGE} AS builder
+FROM ghcr.io/meta-pytorch/openenv-base:latest
 
 USER root
 WORKDIR /app
 
-# 1. Install EVERYTHING needed to build C++ physics engines
+# 1. Install system dependencies for PyBullet & OpenGL
+# Added 'python3-pip' and 'wheel' dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    git build-essential curl python3-dev libgl1-mesa-dev && \
-    rm -rf /var/lib/apt/lists/* # 2. Install uv simply and directly
+    git build-essential curl python3-dev \
+    libgl1 libglvnd0 libglx0 libgl1-mesa-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2. Install uv
 ADD https://astral.sh/uv/install.sh /install.sh
 RUN chmod +x /install.sh && /install.sh && rm /install.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
-# 3. Setup code
+# 3. Copy everything
 COPY . /app/env
 WORKDIR /app/env
 
-# 4. Create venv and install. We use --no-cache to avoid HF permission errors.
+# 4. Install dependencies
+# We install 'wheel' and 'numpy' first, then the rest of requirements
 RUN uv venv .venv && \
+    . .venv/bin/activate && \
+    uv pip install --no-cache wheel setuptools numpy && \
     uv pip install --no-cache -r requirements.txt
 
-# --- Final runtime stage ---
-FROM ${BASE_IMAGE}
-
-USER root
-# Install modern GL libraries for Trixie/Debian 13
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libgl1 libglvnd0 libglx0 && \
-    rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Copy the built venv and code from builder
-COPY --from=builder /app/env/.venv /app/.venv
-COPY --from=builder /app/env /app/env
-
-# Set permissions for the HF user
+# 5. Fix permissions for Hugging Face's internal user
+# HF Spaces run as user 1000
 RUN chown -R 1000:1000 /app
 USER 1000
 
-# Configure environment variables
-ENV PATH="/app/.venv/bin:$PATH"
+# 6. Setup Environment Variables
+ENV PATH="/app/env/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/env:$PYTHONPATH"
 ENV PYTHONUNBUFFERED=1
 
-# Start the server
-WORKDIR /app/env
+# 7. Start the server
+# Make sure server/app.py exists!
 CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "8000"]
