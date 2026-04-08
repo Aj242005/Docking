@@ -33,7 +33,7 @@ FROM ${BASE_IMAGE}
 
 USER root
 # Install runtime libraries for PyBullet's OpenGL dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends libgl1-mesa-glx && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglvnd0 libglx0 && rm -rf /var/lib/apt/lists/*
 USER user
 
 WORKDIR /app
