@@ -1,0 +1,9 @@
+openenv-core
+fastapi>=0.115.0
+uvicorn>=0.24.0
+pybullet
+pydantic
+numpy
+openai
+typing
+asyncio
