@@ -1,9 +1,8 @@
-openenv-core
+openenv-core>=0.2.2
 fastapi>=0.115.0
 uvicorn>=0.24.0
 pybullet
-pydantic
+pydantic>=2.0.0
 numpy
-openai
-typing
-asyncio
+openai>=1.0.0
+httpx>=0.24.0

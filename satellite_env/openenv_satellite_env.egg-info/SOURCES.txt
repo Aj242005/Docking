@@ -4,10 +4,9 @@ client.py
 inference.py
 models.py
 pyproject.toml
-./__init__.py
-./client.py
-./inference.py
-./models.py
+./server/__init__.py
+./server/app.py
+./server/satellite_env_environment.py
 openenv_satellite_env.egg-info/PKG-INFO
 openenv_satellite_env.egg-info/SOURCES.txt
 openenv_satellite_env.egg-info/dependency_links.txt

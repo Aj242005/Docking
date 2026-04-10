@@ -4,3 +4,22 @@ type: space
 runtime: fastapi
 app: server.app:app
 port: 8000
+
+modes:
+  docker:
+    image: registry.hf.space/akshit-jain-sat-docking-rl:latest
+    port: 8000
+  uv:
+    entrypoint: server.app:main
+    port: 8000
+
+server:
+  entrypoint: server.app:app
+  main: server.app:main
+  port: 8000
+
+env:
+  - name: PYTHONUNBUFFERED
+    value: "1"
+  - name: PYTHONPATH
+    value: "/app/env"
