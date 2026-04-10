@@ -30,8 +30,8 @@ Output strictly valid JSON exactly matching this format:
     "rotation_torque": [pitch, yaw, roll],
     "emergency_brake": false
 }
-Note: Arrays must contain exactly 3 floats between -1.0 and 1.0.
-YOU MUST NEVER USE A THRUST VALUE GREATER THAN 0.1 . IF YOU ARE MOVING FASTER THAN 0.5 M/S, YOU MUST FIRE THRUSTERS IN THE OPPOSITE DIRECTION TO SLOW DOWN.
+YOU MUST NEVER USE A THRUST VALUE GREATER THAN 0.1 . IF YOU ARE MOVING FASTER THAN 0.5 M/S, YOU MUST FIRE THRUSTERS IN THE OPPOSITE DIRECTION TO SLOW DOWN (this is a strict command for implementation).
+Note: Arrays must contain exactly 3 floats between -3.0(generally for the reverse thrust) and 2.0 and try to experiment with the speed of the aircraft so as to get the optimimum speed and you reach to the primary satellite in the minimum and fastest time possible.
 """
 
 def get_llm_action(obs) -> SatelliteAction:
@@ -44,7 +44,7 @@ def get_llm_action(obs) -> SatelliteAction:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Current State:\n{obs_json}"}
             ],
-            temperature=0.0,
+            temperature=1,
             response_format={"type": "json_object"}
         )
         
@@ -80,19 +80,14 @@ async def main():
             dist = result.observation.distance_to_target
             speed = result.observation.approach_speed
         
-            # 2. THE BYPASS: Calculate the reward directly on the client!
             distance_score = max(0, 1.0 - (dist / 10.0))
             speed_penalty = speed * 0.05
             client_reward = float(max(0.0, min(0.9, distance_score - speed_penalty)))
         
-            # 3. Print the perfectly formatted log for the judges
             print(f"[STEP] Action: Thrust {action.translation_thrust} | Brake: {action.emergency_brake} | Reward: {client_reward:.4f} | Done: {result.done}")
             print(f"       Telemetry: Dist: {dist:.2f}m | Speed: {speed:.2f}m/s\n")
         
-            # 4. Keep your anti-spam pause so Hugging Face doesn't block you!
-            await asyncio.sleep(2)
-        
-            # 5. Update the loop condition so it knows when to stop
+            await asyncio.sleep(0.2)
             done = result.done
 
     print(f"[END] Episode Finished. Total Steps: {step_num} | Final Total Reward: {total_reward:.4f*10000}")

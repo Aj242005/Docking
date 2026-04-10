@@ -1,2 +1,2 @@
 [console_scripts]
-server = satellite_env.server.app:main
+server = server.app:main
