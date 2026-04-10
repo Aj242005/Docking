@@ -1,5 +1,6 @@
+import json
 from openenv.core.env_server.types import Action, Observation
-from pydantic import Field
+from pydantic import Field, field_validator
 from typing import List
 
 class SatelliteAction(Action):
@@ -19,6 +20,18 @@ class SatelliteAction(Action):
         default=False, 
         description="If True, ignores thrust/torque and fires retro-thrusters to kill all velocity."
     )
+    
+    @field_validator('translation_thrust', 'rotation_torque', mode='before')
+    @classmethod
+    def parse_stringified_lists(cls, value):
+        if isinstance(value, str):
+            try:
+                # Converts "[0.1, 0.1, 0.1]" into an actual Python list [0.1, 0.1, 0.1]
+                return json.loads(value)
+            except json.JSONDecodeError:
+                # Fallback neutral vector if the LLM completely scrambles the output
+                return [0.0, 0.0, 0.0]
+        return value
 
 class SatelliteObservation(Observation):
     """All the observations that an agent can fetch from the environment."""

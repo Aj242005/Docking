@@ -108,6 +108,9 @@ class SatelliteEnvironment(Environment[SatelliteAction, SatelliteObservation, St
         """Apply action, advance simulation, compute shaped reward."""
         self.step_count += 1
 
+        if self.agent_id is None:
+            self.reset()
+
         # ── Apply control inputs ──────────────────────────────────────────
         if action.emergency_brake:
             p.resetBaseVelocity(self.agent_id, [0, 0, 0], [0, 0, 0])
